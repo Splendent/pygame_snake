@@ -16,6 +16,7 @@ class Snake:
         self.body = [Vector2(5, 10), Vector2(6, 10), Vector2(7, 10)]
         self.direction = v_left
         self.new_block = False
+        self.last_mapped_dirction = 0
 
     def draw(self):
         for index, block in enumerate(self.body):
@@ -27,6 +28,7 @@ class Snake:
                 direction = self.body[index-1] - self.body[index]
             else:
                 direction = self.body[index] - self.body[index + 1]
+                
             mappedDirction = 0
             if direction == v_up:
                 mappedDirction = 0
@@ -34,15 +36,34 @@ class Snake:
                 mappedDirction = 1
             elif direction == v_left:
                 mappedDirction = 3
-            else:
+            elif direction == v_right:
                 mappedDirction = 2
+            else:
+                mappedDirction = self.last_mapped_dirction
 
             if index == 0:
                 screen.blit(snake_head_img_arr[mappedDirction],rect)
+                self.last_mapped_dirction = mappedDirction
             elif index == len(self.body) - 1:
                 screen.blit(snake_tail_img_arr[mappedDirction], rect)
+                self.last_mapped_dirction = mappedDirction
             else:
-                screen.blit(snake_body_img_arr[mappedDirction], rect)
+                prev = self.body[index - 1] - self.body[index]
+                next = self.body[index + 1] - self.body[index]
+                if prev.x == next.x or prev.y == next.y:
+                    screen.blit(snake_body_img_arr[mappedDirction], rect)
+                else:
+                    if prev.x == -1 and next.y == -1 or prev.y == -1 and next.x == -1:
+                        screen.blit(snake_body_corner_arr[2], rect)
+                    elif prev.x == -1 and next.y == 1 or prev.y == 1 and next.x == -1:
+                        screen.blit(snake_body_corner_arr[3], rect)
+                    elif prev.x == 1 and next.y == -1 or prev.y == -1 and next.x == 1:
+                        screen.blit(snake_body_corner_arr[1], rect)
+                    elif prev.x == 1 and next.y == 1 or prev.y == 1 and next.x == 1:
+                        screen.blit(snake_body_corner_arr[0], rect)
+                    else:
+                        pass
+                # screen.blit(snake_body_img_arr[mappedDirction], rect)
             
 
     def move(self):
@@ -103,7 +124,7 @@ class Main:
             head.y = 0
         elif head.y < 0:
             head.y = cell_number-1
-        print(head)
+        # print(head)
 
 pygame.init()
 cell_size = 40
@@ -134,12 +155,16 @@ snake_tail_img_right = pygame.transform.rotate(snake_tail_img, 90)
 snake_tail_img_down = pygame.transform.rotate(snake_tail_img, 180)
 snake_tail_img_arr = [snake_tail_img, snake_tail_img_down,
                       snake_tail_img_left, snake_tail_img_right]
-
+snake_body_corner = pygame.transform.scale(pygame.image.load(
+    'body_corner.png').convert_alpha(), (cell_size, cell_size))
+snake_body_corner_arr = [snake_body_corner,
+                         pygame.transform.rotate(snake_body_corner, 90), pygame.transform.rotate(snake_body_corner, 180), pygame.transform.rotate(snake_body_corner, 270)]
 
 SCREEN_UPDATE = pygame.USEREVENT
-pygame.time.set_timer(SCREEN_UPDATE, 150)
-
 main_game = Main()
+pygame.time.set_timer(SCREEN_UPDATE, 200-len(main_game.snake.body)*10)
+
+
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
