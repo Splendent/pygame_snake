@@ -1,9 +1,7 @@
-from email.quoprimime import body_check
-import enum
+
 import sys
 import random
-from turtle import left, screensize
-from pip import main
+from threading import Timer
 import pygame
 from pygame.math import Vector2
 
@@ -132,11 +130,28 @@ class Main:
         self.fruit = Fruit()
         self.grass_random = random.randint(2, int(cell_number/5))
         self.grass_img = pygame.transform.scale(pygame.image.load('grass.png').convert_alpha(), (cell_size, cell_size))
-        
-    def game_over(self) -> None: 
+        self.bgm = pygame.mixer.Sound('bgm.wav')
+        self.biteSound = pygame.mixer.Sound('bite.wav')
+        self.game_over_sound = pygame.mixer.Sound('fail.wav')
+        self.game_over_flag = False
+        self.bgm.play(-1,0)
+
+    def restart(self):
+        self.game_over_flag = False
         self.snake = Snake()
         self.fruit = Fruit()
+        self.bgm.play(-1, 0)
+        
+    def game_over(self) -> None:
+        self.game_over_flag = True
+        self.bgm.stop()
+        self.game_over_sound.play()
+        Timer(5.0, self.restart).start()
+        
+
     def update(self) -> None:
+        if self.game_over_flag == True:
+            return
         self.snake.move()
         self.check_failure()
         self.check_boundary()
@@ -151,6 +166,7 @@ class Main:
         if self.fruit.pos == self.snake.body[0]:
             self.fruit = Fruit()
             self.snake.add_block()
+            self.biteSound.play()
     def check_failure(self) -> None:
         for block in self.snake.body[1:]:
             if block == self.snake.body[0]:
